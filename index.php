@@ -10,12 +10,10 @@ include "./config.php";
 $db = new Database();
 
 $users = $db->select('users', '*', 'id != ?', [$_SESSION['user']['id']], 'i');
-
 if (isset($_GET['chat']) && is_numeric($_GET['chat'])) {
-    $chatId = $_GET['chat'];
-    $messages = $db->select('messages', '*', 'sender_id = ? AND receiver_id = ? OR sender_id = ? AND receiver_id = ?', [$chatId, $_SESSION['user']['id'], $_SESSION['user']['id'], $chatId], 'iiii');
-
-    print_r($messages);
+    $receiverId = $_GET['chat'];
+    $messages = $db->select('messages', '*', 'sender_id = ? AND receiver_id = ? OR sender_id = ? AND receiver_id = ?', [$receiverId, $_SESSION['user']['id'], $_SESSION['user']['id'], $receiverId], 'iiii');
+    $receiver = $db->select('users', '*', 'id = ?', [$receiverId], 'i');
 } else {
     $messages = null;
 }
@@ -62,60 +60,52 @@ if (isset($_GET['chat']) && is_numeric($_GET['chat'])) {
 
     <!-- Chat area -->
     <div class="chat-area">
-        <div class="chat-header">
-            <button class="menu-button" onclick="toggleSidebar()">☰</button>
-            <div class="chat-header-avatar">JD</div>
-            <div class="chat-header-info">
-                <div class="chat-header-name">John Doe</div>
-                <div class="chat-header-status">Online</div>
-            </div>
-        </div>
-
-        <div class="messages-container">
-            <div class="messages-container-inner">
-                <!-- Received message -->
-                <div class="message received">
-                    <div class="message-bubble">Hey there! How are you doing?</div>
-                    <div class="message-time">10:30 AM</div>
-                </div>
-
-                <!-- Sent message -->
-                <div class="message sent">
-                    <div class="message-bubble">I'm doing great! Just working on some projects.</div>
-                    <div class="message-time">10:32 AM</div>
-                </div>
-
-                <!-- Received message -->
-                <div class="message received">
-                    <div class="message-bubble">That sounds interesting. What kind of projects?</div>
-                    <div class="message-time">10:33 AM</div>
-                </div>
-
-                <!-- Sent message -->
-                <div class="message sent">
-                    <div class="message-bubble">I'm building a messenger app with HTML and CSS. It's coming along
-                        nicely!</div>
-                    <div class="message-time">10:35 AM</div>
-                </div>
-
-                <!-- Received message -->
-                <div class="message received">
-                    <div class="message-bubble">Wow, that's awesome! The design looks really clean and modern.</div>
-                    <div class="message-time">10:37 AM</div>
+        <?php if (!empty($messages)): ?>
+            <div class="chat-header">
+                <button class="menu-button" onclick="toggleSidebar()">☰</button>
+                <div class="chat-header-avatar">JD</div>
+                <div class="chat-header-info">
+                    <div class="chat-header-name">John Doe</div>
                 </div>
             </div>
-        </div>
 
-        <div class="message-input-area">
-            <input type="text" class="message-input" placeholder="Type a message...">
-            <button class="send-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-            </button>
-        </div>
+            <div class="messages-container">
+                <div class="messages-container-inner">
+
+
+                    <?php foreach ($messages as $message): ?>
+                        <?php if ($message['sender_id'] == $_SESSION['user']['id']): ?>
+                            <!-- Sent message -->
+                            <div class="message sent">
+                                <div class="message-bubble"><?= $message['content'] ?></div>
+                                <div class="message-time">10:32 AM</div>
+                            </div>
+                        <?php else: ?>
+                            <!-- Received message -->
+                            <div class="message received">
+                                <div class="message-bubble"><?= $message['content'] ?></div>
+                                <div class="message-time">10:30 AM</div>
+                            </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="message-input-area">
+                <input type="text" class="message-input" placeholder="Type a message...">
+                <button class="send-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        <?php else: ?>
+            <div class="no-chat-selected">
+                <h2>Select a chat to start messaging</h2>
+            </div>
+        <?php endif; ?>
     </div>
 
     <script>
